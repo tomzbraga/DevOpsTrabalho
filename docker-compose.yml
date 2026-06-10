@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   # ── Banco de Dados PostgreSQL ─────────────────────────────
   db:
@@ -48,23 +47,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    networks:
-      - pedidofacil-network
-
-  # ── Frontend React ────────────────────────────────────────
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-    container_name: pedidofacil-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:80"
-    depends_on:
-      backend:
-        condition: service_healthy
     networks:
       - pedidofacil-network
 
