@@ -1,97 +1,112 @@
-# .github/workflows/ci.yml
-name: CI/CD Pipeline — PedidoFácil
+name: CI/CD Pipeline - PedidoFácil
+
 # Executa em push e pull request para a branch main
 on:
-push:
-branches: [main]
-pull_request:
-branches: [main]
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
-# ── JOB 1: Testes do Backend ────────────────────────────
-test:
-name: Testes Automatizados
-runs-on: ubuntu-latest
-steps:
-- name: Checkout do código
-uses: actions/checkout@v4
-- name: Configurar Node.js 18
-uses: actions/setup-node@v4
-with:
-node-version: '18'
-cache: 'npm'
-cache-dependency-path: backend/package-lock.json
-- name: Instalar dependências do backend
-working-directory: ./backend
-run: npm install
-- name: Executar testes
-working-directory: ./backend
-run: npm test
-# ── JOB 2: Build das Imagens Docker ────────────────────
-build:
-name: Build Docker
-runs-on: ubuntu-latest
-needs: test # Só roda se os testes passarem
-steps:
-- name: Checkout do código
-uses: actions/checkout@v4
-- name: Criar arquivo .env para build
-run: |
-echo "DB_HOST=db" >> .env
-echo "DB_PORT=5432" >> .env
-echo "DB_NAME=pedidofacil" >> .env
-echo "DB_USER=postgres" >> .env
-echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-echo "PORT=3001" >> .env
-echo "VITE_API_URL=http://localhost:3001" >> .env
-- name: Build das imagens com Docker Compose
-run: docker compose build
-- name: Validar containers sobem corretamente
-run: |
-docker compose up -d db backend
-sleep 30
-docker compose ps
-docker compose logs backend | tail -20
-- name: Verificar healthcheck do backend
-run: |
-curl --retry 10 --retry-delay 3 --retry-connrefused \
-http://localhost:3001/health
-- name: Derrubar containers de teste
-if: always()
-run: docker compose down -v
-# ── JOB 3: Publicar Imagem no Docker Hub ───────────────
-deploy:
-name: Deploy (Publicar Imagem)
-runs-on: ubuntu-latest
-needs: build # Só roda se o build passou
-if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-steps:
-- name: Checkout do código
-uses: actions/checkout@v4
-- name: Login no Docker Hub
-uses: docker/login-action@v3
-with:
-username: ${{ secrets.DOCKERHUB_USERNAME }}
-password: ${{ secrets.DOCKERHUB_TOKEN }}
-- name: Build e push da imagem do backend
-uses: docker/build-push-action@v5
-with:
-context: ./backend
-push: true
-tags: |
-${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:latest
-${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:${{ github.sha }}
-- name: Build e push da imagem do frontend
-uses: docker/build-push-action@v5
-with:
-context: ./frontend
-push: true
-tags: |
-${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:latest
-${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:${{ github.sha }}
-- name: Rollback automático se falhar
-if: failure()
-run: |
-echo "Deploy falhou! Revertendo para versão anterior (latest)..."
-docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:latest
-docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:latest
-echo "Imagens da versão anterior disponíveis para uso."
+  # ── JOB 1: Testes do Backend ────────────────────────────
+  test:
+    name: Testes Automatizados
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependências do backend
+        working-directory: ./backend
+        run: npm install
+
+      - name: Executar testes
+        working-directory: ./backend
+        run: npm test
+
+  # ── JOB 2: Build das Imagens Docker ────────────────────
+  build:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    needs: test # Só roda se os testes passarem
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Criar arquivo .env para build
+        run: |
+          echo "DB_HOST=db" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_NAME=pedidofacil" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "PORT=3001" >> .env
+          echo "VITE_API_URL=http://localhost:3001" >> .env
+
+      - name: Build das imagens com Docker Compose
+        run: docker compose build
+
+      - name: Validar containers sobem corretamente
+        run: |
+          docker compose up -d db backend
+          sleep 30
+          docker compose ps
+          docker compose logs backend | tail -20
+
+      - name: Verificar healthcheck do backend
+        run: |
+          curl --retry 10 --retry-delay 3 --retry-connrefused \
+          http://localhost:3001/health
+
+      - name: Derrubar containers de teste
+        if: always()
+        run: docker compose down -v
+
+  # ── JOB 3: Publicar Imagem no Docker Hub ───────────────
+  deploy:
+    name: Deploy (Publicar Imagem)
+    runs-on: ubuntu-latest
+    needs: build # Só roda se o build passou
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build e push da imagem do backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:${{ github.sha }}
+
+      - name: Build e push da imagem do frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:${{ github.sha }}
+
+      - name: Rollback automático se falhar
+        if: failure()
+        run: |
+          echo "Deploy falhou! Revertendo para versão anterior (latest)..."
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-backend:latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pedidofacil-frontend:latest
+          echo "Imagens da versão anterior disponíveis para uso."
