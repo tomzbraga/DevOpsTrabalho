@@ -1,5 +1,5 @@
 const request = require("supertest");
-const app = require("../src/index");
+const app = require("backend/src/index.js");
 describe("GET /health", () => {
   it("deve retornar status 200 e status ok", async () => {
     const res = await request(app).get("/health");
