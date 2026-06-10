@@ -1,8 +1,8 @@
 const request = require("supertest");
-const app = require("backend/src/index.js");
+const app = require("../../index.js");
 // Mock do módulo de banco de dados
 // (evita precisar de PostgreSQL rodando nos testes)
-jest.mock("./db", () => {
+jest.mock("../../db", () => {
   const pedidosMock = [
     {
       id: 1,
