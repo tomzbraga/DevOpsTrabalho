@@ -1,0 +1,85 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f0f2f5;
+  color: #333;
+}
+
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  font-size: 2rem;
+}
+
+h2 {
+  margin-bottom: 15px;
+  color: #34495e;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+input, select {
+  width: 100%;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.pedido-item {
+  border-left: 4px solid #3498db;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: #f8f9fa;
+  border-radius: 0 6px 6px 0;
+}
+
+.pedido-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.pedido-item span {
+  font-size: 13px;
+  color: #666;
+}
+
+.status-pendente { color: #e67e22; font-weight: bold; }
+.status-pronto   { color: #27ae60; font-weight: bold; }
+
+.erro  { color: red; margin-top: 8px; font-size: 13px; }
+.vazio { color: #aaa; text-align: center; padding: 20px 0; }
